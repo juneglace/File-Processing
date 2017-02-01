@@ -1,3 +1,5 @@
+/* Variable-length */
+
 #include    <stdio.h>
 #include    <stdlib.h>
 #include    <string.h>
@@ -13,7 +15,7 @@
 #define MAXSTRLEN   200
 #define PHONESIZE   20
 
-/* ±¸ºĞÀÚ */
+/* êµ¬ë¶„ì */
 #define	DELIM "|"
 
 typedef struct {
@@ -25,8 +27,8 @@ typedef struct {
 }   T_PEOPLE;
 
 typedef	struct {
-	int		count;	/* ·¹ÄÚµåÀÇ ¼ö */
-	off_t	avail_head;	/* avail listÀÇ Ã¹¹øÂ° ·¹ÄÚµå ÁÖ¼Ò, ¾øÀ¸¸é -1 */
+	int		count;	/* ë ˆì½”ë“œì˜ ìˆ˜ */
+	off_t	avail_head;	/* avail listì˜ ì²«ë²ˆì§¸ ë ˆì½”ë“œ ì£¼ì†Œ, ì—†ìœ¼ë©´ -1 */
 }	T_HEADER;
 
 int     	num_people=0;
@@ -58,7 +60,7 @@ main(int argc, char **argv)
         exit(1);
     }
 
-	/* ¸ÕÀú Çì´õ ·¹ÄÚµå¸¦ ÀúÀå */
+	/* ë¨¼ì € í—¤ë” ë ˆì½”ë“œë¥¼ ì €ì¥ */
 	header_record.avail_head = -1;
 	header_record.count = 0;
 	if(sizeof(header_record) != write(people_file, (char*)&header_record, sizeof(header_record))) {
@@ -71,7 +73,7 @@ main(int argc, char **argv)
                     people_buf.name, &(people_buf.sex), people_buf.phone,
                     people_buf.address)) break;
 
-		/* ÀÌÁø µ¥ÀÌÅÍ ÆÄÀÏ¿¡ °¡º¯±æÀÌ ÇüÅÂ·Î ·¹ÄÚµå ÀúÀå */
+		/* ì´ì§„ ë°ì´í„° íŒŒì¼ì— ê°€ë³€ê¸¸ì´ í˜•íƒœë¡œ ë ˆì½”ë“œ ì €ì¥ */
 		if((rec_addr = write_people(people_file, num_people, &people_buf)) == eERROR) {
         	fprintf(stderr, "can\'t write the %d\'th people\n", num_people);
            	exit(1);
@@ -81,17 +83,17 @@ main(int argc, char **argv)
     }
     fprintf(stderr, "%d people data stored ...\n", num_people);
 
-	/* Çì´õ ·¹ÄÚµåÀÇ count °ªÀ» num_people·Î ¼öÁ¤ */
+	/* í—¤ë” ë ˆì½”ë“œì˜ count ê°’ì„ num_peopleë¡œ ìˆ˜ì • */
 	header_record.count = num_people;
 	header_record.avail_head = -1;
 
-	/* ÆÄÀÏ Æ÷ÀÎÅÍ¸¦ Ã³À½À¸·Î ¿Å±è */
+	/* íŒŒì¼ í¬ì¸í„°ë¥¼ ì²˜ìŒìœ¼ë¡œ ì˜®ê¹€ */
 	if(eERROR == lseek(people_file, 0, SEEK_SET)) {
 		fprintf(stderr, "seek error ...\n");
 		exit(1);
 	}
 
-	/* Çì´õ ·¹ÄÚµå¸¦ ÆÄÀÏ¿¡ ÀúÀå */
+	/* í—¤ë” ë ˆì½”ë“œë¥¼ íŒŒì¼ì— ì €ì¥ */
 	if(sizeof(header_record) != write(people_file, (char*)&header_record, sizeof(header_record))) {
 		fprintf(stderr, "can\'t write the header record\n");
 		exit(1);
@@ -107,24 +109,24 @@ int	write_people(int out_file, int index, T_PEOPLE *people)
 	int		size;
 	int		rec_address;
 
-	/* PACKING : buffer¸¦ ÇÊµå°ª°ú ±¸ºĞÀÚÀÇ ¿¬¼ÓÀ¸·Î ±¸¼º */
+	/* PACKING : bufferë¥¼ í•„ë“œê°’ê³¼ êµ¬ë¶„ìì˜ ì—°ì†ìœ¼ë¡œ êµ¬ì„± */
 	sprintf(buffer, "%d%s%s%s%c%s%s%s%s%s", people->number, DELIM, people->name, DELIM, people->sex,
 					DELIM, people->phone, DELIM, people->address, DELIM);
 	size = strlen(buffer);
 
-	/* ÇöÀç ÀúÀåÇÒ ·¹ÄÚµåÀÇ ¹ÙÀÌÆ® ÁÖ¼Ò¸¦ È®ÀÎ */
+	/* í˜„ì¬ ì €ì¥í•  ë ˆì½”ë“œì˜ ë°”ì´íŠ¸ ì£¼ì†Œë¥¼ í™•ì¸ */
 	rec_address = lseek(out_file, 0, SEEK_CUR);
 
-	/* ·¹ÄÚµå ±æÀÌ¸¦ ÀúÀå */
+	/* ë ˆì½”ë“œ ê¸¸ì´ë¥¼ ì €ì¥ */
 	if(sizeof(size) != write(out_file, (char*)&size, sizeof(size))) {
 			return(eERROR);
 	}
 
-	/* ·¹ÄÚµå¸¦ ÀúÀå */
+	/* ë ˆì½”ë“œë¥¼ ì €ì¥ */
 	if(size != write(out_file, buffer, size)) {
 			return(eERROR);
 	}
 
-	/* ÀúÀåÇÑ ·¹ÄÚµåÀÇ ¹ÙÀÌÆ® ÁÖ¼Ò¸¦ ¹İÈ¯ */
+	/* ì €ì¥í•œ ë ˆì½”ë“œì˜ ë°”ì´íŠ¸ ì£¼ì†Œë¥¼ ë°˜í™˜ */
 	return(rec_address);
 }
